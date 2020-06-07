@@ -7,6 +7,7 @@ import { Map, TileLayer, Marker } from 'react-leaflet';
 import { LeafletMouseEvent } from 'leaflet';
 import api from '../../services/api';
 import axios from 'axios';
+import Dropzone from '../../components/Dropzone';
 
 interface Item{
     id: number,
@@ -39,6 +40,8 @@ const CreatePoint = () => {
     const [selectedCity, setselectedCity] = useState('0');
     const [selectedPosition, setSelectedPosition] = useState<[number, number]>([0, 0]);
     const [selectedItems, setSelectedItems] = useState<number[]>([]);
+    const [selectedFile, setSelectedFile] = useState<File>();
+    
     const history = useHistory();
 
     useEffect(() => {
@@ -108,15 +111,23 @@ const CreatePoint = () => {
     async function handleSubmit(e: FormEvent){
         e.preventDefault();
 
+        const { name, email, whatsapp } = formData;
         const [latitude, longitude] = selectedPosition;
-        const data = {
-            ...formData,
-            uf: selectedUF,
-            city: selectedCity,
-            latitude,
-            longitude,
-            items: selectedItems
-        };
+
+        const data = new FormData();
+
+        data.append('name', name);
+        data.append('email', email);
+        data.append('whatsapp', whatsapp);
+        data.append('uf', selectedUF);
+        data.append('city', selectedCity);
+        data.append('latitude', String(latitude));
+        data.append('longitude', String(longitude));
+        data.append('items', selectedItems.join(','));
+
+        if(selectedFile){
+            data.append('image', selectedFile);
+        }
 
         await api.post('points', data);
         alert('Ponto de coleta criado!');
@@ -134,6 +145,9 @@ const CreatePoint = () => {
             </header>
             <form onSubmit={handleSubmit}>
                 <h1>Cadastro do <br/> ponto de coleta</h1>
+                
+                <Dropzone onFileUploaded={setSelectedFile}/>
+                
                 <fieldset>
                     <legend>
                         <h2>Dados</h2>
